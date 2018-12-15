@@ -1,0 +1,51 @@
+---
+version: 2
+jobs:
+  test-ruby2.4:
+    docker:
+      - image: circleci/ruby:2.4.5
+    steps:
+      - checkout
+      - run:
+          command: ./bin/setup
+      - run:
+          command: bundle exec rake
+
+  test-ruby2.5:
+    docker:
+      - image: circleci/ruby:2.5.3
+    steps:
+      - checkout
+      - run:
+          command: ./bin/setup
+      - run:
+          command: bundle exec rake
+
+  deploy:
+    docker:
+      - image: circleci/ruby:2.5.3
+    steps:
+      - checkout
+      - run:
+          command: ./bin/setup
+      - run:
+          command: ./.circleci/setup-rubygems-credential.sh
+      - run:
+          command: |
+            bundle exec rake build
+            gem push ./pkg/specinfra-backend-salt-`git describe --tags`.gem
+
+workflows:
+  version: 2
+  test-and-deploy:
+    jobs:
+      - test-ruby2.4
+      - test-ruby2.5
+      - deploy:
+          requires:
+            - test-ruby2.4
+            - test-ruby2.5
+          filters:
+            branches:
+              only:
+                - master
