@@ -1,6 +1,6 @@
 # Specinfra::Backend::Salt
 
-[![Gem Version](https://badge.fury.io/rb/specinfra-backend-salt.svg)](http://badge.fury.io/rb/specinfra-backend-salt)
+[![Gem Version](https://badge.fury.io/rb/specinfra-backend-salt.svg)](https://badge.fury.io/rb/specinfra-backend-salt)
 [![CircleCI](https://circleci.com/gh/haru-ake/specinfra-backend-salt.svg?style=svg)](https://circleci.com/gh/haru-ake/specinfra-backend-salt)
 
 This backend execute command on salt-minion from salt-master using `salt cmd.run` command.
@@ -29,7 +29,7 @@ An example for using [Serverspec](https://serverspec.org/).
 
 ```ruby:spec_helper.rb
 require 'serverspec'
-require 'specinfra-backend-salt'
+require 'specinfra/backend/salt'
 
 set :backend, :salt
 
