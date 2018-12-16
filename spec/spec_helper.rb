@@ -1,5 +1,9 @@
 require "bundler/setup"
+require 'specinfra'
+require 'specinfra/helper/set'
 require "specinfra/backend/salt"
+
+include Specinfra::Helper::Set
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -10,5 +14,12 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  # reset `salt_*` options before each tests.
+  config.before(:each) do
+    %w(salt_user salt_sudo_user salt_sudo_password salt_sudo_path salt_sudo_disable).each do |option|
+      Specinfra.configuration.instance_variable_set("@#{option}", nil)
+    end
   end
 end
