@@ -118,7 +118,7 @@ RSpec.describe Specinfra::Backend::Salt do
 
     context 'without sudo' do
       before do
-        set :salt_sudo_disable, true
+        set :salt_become_method, :none
       end
 
       it_should_behave_like "builded simple command", \

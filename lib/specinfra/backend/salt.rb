@@ -1,6 +1,6 @@
 require 'specinfra/backend/base'
 require 'specinfra/backend/exec'
-require "open3"
+require 'open3'
 require 'json'
 
 module Specinfra
@@ -33,7 +33,8 @@ module Specinfra
       def build_command(cmd)
         cmd = build_salt_command(cmd)
 
-        if get_config(:salt_sudo_disable)
+        case get_config(:salt_become_method)
+        when :none
           cmd
         else
           "#{sudo} /bin/sh -c #{cmd.shellescape}"
@@ -74,7 +75,7 @@ module Specinfra
         exit_status = nil
 
         sudo_password = nil
-        if !get_config(:salt_sudo_disable) && get_config(:salt_sudo_password)
+        if get_config(:salt_become_method) != :none && get_config(:salt_sudo_password)
           sudo_password = get_config(:salt_sudo_password) + "\n"
         end
 

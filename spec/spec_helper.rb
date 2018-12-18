@@ -18,7 +18,7 @@ RSpec.configure do |config|
 
   # reset `salt_*` options before each tests.
   config.before(:each) do
-    %w(salt_user salt_sudo_user salt_sudo_password salt_sudo_path salt_sudo_disable).each do |option|
+    %w(salt_user salt_sudo_user salt_sudo_password salt_sudo_path salt_become_method).each do |option|
       Specinfra.configuration.instance_variable_set("@#{option}", nil)
     end
   end
