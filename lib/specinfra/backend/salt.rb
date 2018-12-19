@@ -36,6 +36,9 @@ module Specinfra
         case get_config(:salt_become_method)
         when :none
           cmd
+        when :su
+          cmd = "/bin/sh -c #{cmd.shellescape} 2> /dev/null"
+          "#{su} #{cmd.shellescape}"
         else
           "#{sudo} /bin/sh -c #{cmd.shellescape}"
         end
@@ -98,6 +101,14 @@ module Specinfra
         sudo_user = get_config(:salt_sudo_user) || 'root'
 
         "#{sudo_path} -S -u #{sudo_user}"
+      end
+
+      def su
+        su_path = 'su'
+        su_path = "#{get_config(:salt_su_path)}/#{su_path}" if get_config(:salt_su_path)
+        su_user = get_config(:salt_su_user) || 'root'
+
+        "#{su_path} #{su_user} -c"
       end
     end
   end
