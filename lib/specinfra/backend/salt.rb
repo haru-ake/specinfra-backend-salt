@@ -71,50 +71,54 @@ module Specinfra
         env.to_json
       end
 
-      def extract_result(json)
-        json.empty? ? "" : JSON.parse(json)[get_config(:host)]
+      def salt_error_message_regexp
+        /^Minion\ did\ not\ return\.\ \[.*\]$/
+      end
+
+      def sudo_fail_message_regexp
+        /(Sorry,\ try\ again\.|sudo:\ [0-9]+\ incorrect\ password\ attempts)\R/
       end
 
       def su_prompt_regexp
         /^Password:\s*/
       end
 
-      def su_fail_prompt_regexp
+      def su_fail_message_regexp
         /^su:\ (Authentication\ failure|Sorry)\R/
+      end
+
+      def parse_salt_response(response)
+        stdout_data = JSON.parse(response[:stdout])[get_config(:host)]
+        if stdout_data =~ salt_error_message_regexp
+          fail "salt command failed. #{response.to_s}"
+        end
+
+        stderr_data = response[:stderr]
+        exit_status = response[:exit_status]
+
+        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
+      rescue JSON::ParserError
+        fail "salt command failed. #{response.to_s}"
       end
 
       def salt_exec!(cmd)
         r = get_config(:salt_become_method) == :su ? \
           exec_with_pty!(cmd) : exec_with_open3!(cmd)
-
-        stdout_data = r[:stdout]
-        stderr_data = r[:stderr]
-        exit_status = r[:exit_status]
-
-        unless exit_status == 0
-          stderr_data = "\n" + stderr_data unless stderr_data.empty?
-          stderr_data = stdout_data + stderr_data
-          stdout_data = ''
-        end
-
-        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
+        parse_salt_response(r)
       end
 
       def exec_with_open3!(cmd)
-        stdout_data, stderr_data = '', ''
-        exit_status = nil
-
         sudo_password = nil
         if get_config(:salt_become_method) != :none && get_config(:salt_sudo_password)
           sudo_password = get_config(:salt_sudo_password) + "\n"
         end
 
-        stdout, stderr, status = Open3.capture3(cmd, :stdin_data => sudo_password)
-        stdout_data = extract_result(stdout)
-        stderr_data = stderr
-        exit_status = status.exitstatus
+        stdout_data, stderr_data, status = Open3.capture3(cmd, :stdin_data => sudo_password)
+        if stderr_data =~ sudo_fail_message_regexp
+          fail 'Wrong sudo password! Please confirm your password.'
+        end
 
-        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
+        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => status.exitstatus }
       end
 
       def exec_with_pty!(cmd)
@@ -132,7 +136,7 @@ module Specinfra
 
           begin
             r.each do |line|
-              if line =~ su_fail_prompt_regexp
+              if line =~ su_fail_message_regexp
                 fail 'Wrong su password! Please confirm your password.'
               end
               stdout_data << line
@@ -144,7 +148,7 @@ module Specinfra
           end
         end
 
-        { :stdout => extract_result(stdout_data), :stderr => stderr_data, :exit_status => exit_status }
+        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
       end
 
       def sudo
