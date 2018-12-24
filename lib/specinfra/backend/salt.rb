@@ -101,7 +101,7 @@ module Specinfra
       end
 
       def exec_with_open3!(cmd)
-        stdout_data, stderr_data = ''
+        stdout_data, stderr_data = '', ''
         exit_status = nil
 
         sudo_password = nil
