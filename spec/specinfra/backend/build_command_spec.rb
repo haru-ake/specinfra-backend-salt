@@ -116,9 +116,44 @@ RSpec.describe Specinfra::Backend::Salt do
         %q(/usr/bin/sudo -S -u root /bin/sh -c salt\ -L\ localhost\ --out\=json\ cmd.run\ env\=\'\{\"LANG\":\"C\"\}\'\ shell\=\'/bin/sh\'\ test\\\\\\ \\\\\\!\\\\\\ -f\\\\\\ /etc/selinux/config\\\\\\ \\\\\\|\\\\\\|\\\\\\ \\\\\\(getenforce\\\\\\ \\\\\\|\\\\\\ grep\\\\\\ -i\\\\\\ --\\\\\\ disabled\\\\\\ \\\\\\&\\\\\\&\\\\\\ grep\\\\\\ -i\\\\\\ --\\\\\\ \\\\\\^SELINUX\\\\\\=disabled\\\\\\$\\\\\\ /etc/selinux/config\\\\\\)\\\\\\;)
     end
 
+    context 'with su' do
+      before do
+        set :salt_become_method, :su
+      end
+
+      it_should_behave_like "builded simple command", \
+        %q(su root -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/passwd\\\\\\\\\\\\\\;\\ 2\\>\\ /dev/null)
+      it_should_behave_like "builded complex command", \
+        %q(su root -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ \\\\\\\\\\\\\\!\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\|\\\\\\\\\\\\\\ \\\\\\\\\\\\\\(getenforce\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ disabled\\\\\\\\\\\\\\ \\\\\\\\\\\\\\&\\\\\\\\\\\\\\&\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ \\\\\\\\\\\\\\^SELINUX\\\\\\\\\\\\\\=disabled\\\\\\\\\\\\\\$\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\)\\\\\\\\\\\\\\;\\ 2\\>\\ /dev/null)
+    end
+
+    context 'with su user' do
+      before do
+        set :salt_become_method, :su
+        set :salt_su_user, 'vagrant'
+      end
+
+      it_should_behave_like "builded simple command", \
+        %q(su vagrant -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/passwd\\\\\\\\\\\\\\;\ 2\\>\\ /dev/null)
+      it_should_behave_like "builded complex command", \
+        %q(su vagrant -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ \\\\\\\\\\\\\\!\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\|\\\\\\\\\\\\\\ \\\\\\\\\\\\\\(getenforce\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ disabled\\\\\\\\\\\\\\ \\\\\\\\\\\\\\&\\\\\\\\\\\\\\&\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ \\\\\\\\\\\\\\^SELINUX\\\\\\\\\\\\\\=disabled\\\\\\\\\\\\\\$\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\)\\\\\\\\\\\\\\;\ 2\\>\\ /dev/null)
+    end
+
+    context 'with su path' do
+      before do
+        set :salt_become_method, :su
+        set :salt_su_path, '/usr/bin'
+      end
+
+      it_should_behave_like "builded simple command", \
+        %q(/usr/bin/su root -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/passwd\\\\\\\\\\\\\\;\ 2\\>\\ /dev/null)
+      it_should_behave_like "builded complex command", \
+        %q(/usr/bin/su root -c /bin/sh\\ -c\\ salt\\\\\\ -L\\\\\\ localhost\\\\\\ --out\\\\\\=json\\\\\\ cmd.run\\\\\\ env\\\\\\=\\\\\\'\\\\\\{\\\\\\"LANG\\\\\\":\\\\\\"C\\\\\\"\\\\\\}\\\\\\'\\\\\\ shell\\\\\\=\\\\\\'/bin/sh\\\\\\'\\\\\\ test\\\\\\\\\\\\\\ \\\\\\\\\\\\\\!\\\\\\\\\\\\\\ -f\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\|\\\\\\\\\\\\\\ \\\\\\\\\\\\\\(getenforce\\\\\\\\\\\\\\ \\\\\\\\\\\\\\|\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ disabled\\\\\\\\\\\\\\ \\\\\\\\\\\\\\&\\\\\\\\\\\\\\&\\\\\\\\\\\\\\ grep\\\\\\\\\\\\\\ -i\\\\\\\\\\\\\\ --\\\\\\\\\\\\\\ \\\\\\\\\\\\\\^SELINUX\\\\\\\\\\\\\\=disabled\\\\\\\\\\\\\\$\\\\\\\\\\\\\\ /etc/selinux/config\\\\\\\\\\\\\\)\\\\\\\\\\\\\\;\ 2\\>\\ /dev/null)
+    end
+
     context 'without sudo' do
       before do
-        set :salt_sudo_disable, true
+        set :salt_become_method, :none
       end
 
       it_should_behave_like "builded simple command", \

@@ -1,6 +1,6 @@
 # Specinfra::Backend::Salt
 
-[![Gem Version](https://badge.fury.io/rb/specinfra-backend-salt.svg)](http://badge.fury.io/rb/specinfra-backend-salt)
+[![Gem Version](https://badge.fury.io/rb/specinfra-backend-salt.svg)](https://badge.fury.io/rb/specinfra-backend-salt)
 [![CircleCI](https://circleci.com/gh/haru-ake/specinfra-backend-salt.svg?style=svg)](https://circleci.com/gh/haru-ake/specinfra-backend-salt)
 
 This backend execute command on salt-minion from salt-master using `salt cmd.run` command.
@@ -29,7 +29,7 @@ An example for using [Serverspec](https://serverspec.org/).
 
 ```ruby:spec_helper.rb
 require 'serverspec'
-require 'specinfra-backend-salt'
+require 'specinfra/backend/salt'
 
 set :backend, :salt
 
@@ -50,11 +50,14 @@ set :host, ENV['TARGET_HOST']
 
 ## Optional options
 
-- `:salt_user` Specify the username who executes command on salt-minion. (default: `root`)
-- `:salt_sudo_user` Specify the username who executes `salt run.cmd` on salt-master. (default: `root`)
+- `:salt_user` Specify the username to execute command on salt-minion. (default: `root`)
+- `:salt_become_method` Specify the privilege escalation method to execute `salt run.cmd` on salt-master. (default: `:sudo`, `:su` or `:none`)
+- `:salt_sudo_user` Specify the username to execute `salt run.cmd` with `sudo` on salt-master. (default: `root`)
 - `:salt_sudo_password` Specify the password of `:salt_sudo_user` user.
 - `:salt_sudo_path` Specify the path of the directory where the `sudo` is placed on salt-master.
-- `:salt_sudo_disable` If set `true`, do not use `sudo` when running `salt run.cmd` on salt-master.
+- `:salt_su_user` Specify the username to execute `salt run.cmd` with `su` on salt-master. (default: `root`)
+- `:salt_su_password` Specify the password of `:salt_su_user` user.
+- `:salt_su_path` Specify the path of the directory where the `su` is placed on salt-master.
 
 ## Development
 
