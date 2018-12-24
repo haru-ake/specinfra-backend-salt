@@ -1,5 +1,7 @@
 require 'specinfra/backend/base'
 require 'specinfra/backend/exec'
+require 'pty'
+require 'expect'
 require 'open3'
 require 'json'
 
@@ -73,7 +75,32 @@ module Specinfra
         json.empty? ? "" : JSON.parse(json)[get_config(:host)]
       end
 
+      def su_prompt_regexp
+        /^Password:\s*/
+      end
+
+      def su_fail_prompt_regexp
+        /^su:\ (Authentication\ failure|Sorry)\R/
+      end
+
       def salt_exec!(cmd)
+        r = get_config(:salt_become_method) == :su ? \
+          exec_with_pty!(cmd) : exec_with_open3!(cmd)
+
+        stdout_data = r[:stdout]
+        stderr_data = r[:stderr]
+        exit_status = r[:exit_status]
+
+        unless exit_status == 0
+          stderr_data = "\n" + stderr_data unless stderr_data.empty?
+          stderr_data = stdout_data + stderr_data
+          stdout_data = ''
+        end
+
+        { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
+      end
+
+      def exec_with_open3!(cmd)
         stdout_data, stderr_data = ''
         exit_status = nil
 
@@ -86,13 +113,38 @@ module Specinfra
         stdout_data = extract_result(stdout)
         stderr_data = stderr
         exit_status = status.exitstatus
-        unless status.success?
-          stderr_data = "\n" + stderr unless stderr.empty?
-          stderr_data = stdout_data + stderr_data
-          stdout_data = ''
-        end
 
         { :stdout => stdout_data, :stderr => stderr_data, :exit_status => exit_status }
+      end
+
+      def exec_with_pty!(cmd)
+        stdout_data, stderr_data = '', ''
+        exit_status = nil
+
+        PTY.spawn({'LANG' => 'C'}, cmd) do |r, w, pid|
+          w.sync = true
+
+          unless Process.uid == 0
+            r.expect(su_prompt_regexp) do
+              w.puts get_config(:salt_su_password)
+            end
+          end
+
+          begin
+            r.each do |line|
+              if line =~ su_fail_prompt_regexp
+                fail 'Wrong su password! Please confirm your password.'
+              end
+              stdout_data << line
+            end
+          rescue Errno::EIO
+          ensure
+            p = Process.wait2 pid
+            exit_status = p[1].exitstatus
+          end
+        end
+
+        { :stdout => extract_result(stdout_data), :stderr => stderr_data, :exit_status => exit_status }
       end
 
       def sudo
